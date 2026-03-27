@@ -3,239 +3,134 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="NexusWorld — A next-generation online sandbox game with photorealistic graphics, infinite worlds, and limitless creativity." />
-  <title>NexusWorld — Next-Gen Sandbox Game</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/src/styles/index.css" />
+  <title>Aether-Realms — Alpha Sandbox</title>
+  
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: 'Courier New', Courier, monospace;
+    }
+    
+    #game-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Start / Pause Screen */
+    #start-screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.85);
+      color: white;
+      cursor: pointer;
+      z-index: 1000;
+      user-select: none;
+    }
+    #start-screen h1 {
+      font-size: 3.5rem;
+      text-transform: uppercase;
+      letter-spacing: 8px;
+      margin-bottom: 20px;
+      color: #0ff;
+      text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    }
+    #start-screen p {
+      font-size: 1.2rem;
+      color: #aaa;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.5; }
+      50% { opacity: 1; }
+      100% { opacity: 0.5; }
+    }
+
+    /* Minimalist HUD */
+    #crosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 24px;
+      height: 24px;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0.6;
+    }
+
+    #hud-info {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: rgba(255, 255, 255, 0.8);
+      pointer-events: none;
+      z-index: 100;
+      background: rgba(0,0,0,0.4);
+      padding: 10px;
+      border-radius: 4px;
+    }
+
+    #toast-container {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .toast {
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 4px;
+      margin-top: 8px;
+      animation: fadeUp 0.3s ease-out forwards;
+    }
+    .toast.success { color: #0fa; box-shadow: 0 0 10px rgba(0,255,170,0.3); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
 <body>
-  <!-- Three.js Canvas Container -->
-  <div id="game-container">
-    <canvas id="game-canvas"></canvas>
+  <canvas id="game-canvas"></canvas>
+  
+  <div id="start-screen">
+    <h1>Aether Realms</h1>
+    <p>CLICK TO AWAKEN</p>
+  </div>
+  
+  <div id="crosshair">
+    <svg viewBox="0 0 24 24" width="24" height="24" stroke="white" stroke-width="1.5" fill="none">
+      <circle cx="12" cy="12" r="1.5"></circle>
+      <line x1="12" y1="2" x2="12" y2="8"></line>
+      <line x1="12" y1="16" x2="12" y2="22"></line>
+      <line x1="2" y1="12" x2="8" y2="12"></line>
+      <line x1="16" y1="12" x2="22" y2="12"></line>
+    </svg>
   </div>
 
-  <!-- Loading Screen -->
-  <div id="loading-screen">
-    <div class="loading-content">
-      <div class="loading-logo">
-        <span class="logo-nexus">NEXUS</span><span class="logo-world">WORLD</span>
-      </div>
-      <div class="loading-bar-container">
-        <div class="loading-bar" id="loading-bar"></div>
-      </div>
-      <p class="loading-text" id="loading-text">Generating world...</p>
-    </div>
-    <div class="loading-particles" id="loading-particles"></div>
+  <div id="hud-info">
+    <div id="fps-counter">FPS: --</div>
   </div>
 
-  <!-- Main Menu -->
-  <div id="main-menu" class="hidden">
-    <div class="menu-bg"></div>
-    <div class="menu-content">
-      <div class="menu-logo">
-        <h1><span class="logo-nexus">NEXUS</span><span class="logo-world">WORLD</span></h1>
-        <p class="menu-tagline">Build. Explore. Survive.</p>
-      </div>
-      <div class="menu-buttons">
-        <button id="btn-singleplayer" class="menu-btn primary">
-          <span class="btn-icon">🌍</span>
-          <span class="btn-label">Play World</span>
-          <span class="btn-desc">Generate a new infinite world</span>
-        </button>
-        <button id="btn-multiplayer" class="menu-btn" disabled>
-          <span class="btn-icon">🌐</span>
-          <span class="btn-label">Multiplayer</span>
-          <span class="btn-desc">Coming soon</span>
-        </button>
-        <button id="btn-settings" class="menu-btn">
-          <span class="btn-icon">⚙️</span>
-          <span class="btn-label">Settings</span>
-          <span class="btn-desc">Graphics, controls, audio</span>
-        </button>
-      </div>
-      <div class="menu-footer">
-        <span>NexusWorld v0.1.0</span>
-        <span>© 2026</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Settings Menu -->
-  <div id="settings-menu" class="hidden">
-    <div class="settings-panel glass-panel">
-      <div class="settings-header">
-        <h2>⚙️ Settings</h2>
-        <button id="btn-settings-close" class="close-btn">✕</button>
-      </div>
-      <div class="settings-body">
-        <div class="settings-group">
-          <h3>Graphics</h3>
-          <div class="setting-row">
-            <label for="render-distance">Render Distance</label>
-            <input type="range" id="render-distance" min="2" max="12" value="6" />
-            <span id="render-distance-val" class="setting-value">6</span>
-          </div>
-          <div class="setting-row">
-            <label for="fov">Field of View</label>
-            <input type="range" id="fov" min="50" max="120" value="75" />
-            <span id="fov-val" class="setting-value">75°</span>
-          </div>
-          <div class="setting-row">
-            <label for="shadows-toggle">Shadows</label>
-            <label class="toggle-switch">
-              <input type="checkbox" id="shadows-toggle" checked />
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-          <div class="setting-row">
-            <label for="fog-toggle">Fog Effects</label>
-            <label class="toggle-switch">
-              <input type="checkbox" id="fog-toggle" checked />
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
-        <div class="settings-group">
-          <h3>Audio</h3>
-          <div class="setting-row">
-            <label for="master-volume">Master Volume</label>
-            <input type="range" id="master-volume" min="0" max="100" value="80" />
-            <span id="master-volume-val" class="setting-value">80%</span>
-          </div>
-          <div class="setting-row">
-            <label for="music-volume">Music Volume</label>
-            <input type="range" id="music-volume" min="0" max="100" value="50" />
-            <span id="music-volume-val" class="setting-value">50%</span>
-          </div>
-        </div>
-        <div class="settings-group">
-          <h3>Controls</h3>
-          <div class="controls-grid">
-            <div class="control-item"><kbd>W</kbd> Forward</div>
-            <div class="control-item"><kbd>S</kbd> Backward</div>
-            <div class="control-item"><kbd>A</kbd> Left</div>
-            <div class="control-item"><kbd>D</kbd> Right</div>
-            <div class="control-item"><kbd>Space</kbd> Jump</div>
-            <div class="control-item"><kbd>Shift</kbd> Sprint</div>
-            <div class="control-item"><kbd>E</kbd> Inventory</div>
-            <div class="control-item"><kbd>C</kbd> Crafting</div>
-            <div class="control-item"><kbd>LMB</kbd> Break Block</div>
-            <div class="control-item"><kbd>RMB</kbd> Place Block</div>
-            <div class="control-item"><kbd>1-9</kbd> Hotbar</div>
-            <div class="control-item"><kbd>Esc</kbd> Pause</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- HUD -->
-  <div id="hud" class="hidden">
-    <!-- Crosshair -->
-    <div id="crosshair">
-      <div class="crosshair-dot"></div>
-      <div class="crosshair-line top"></div>
-      <div class="crosshair-line bottom"></div>
-      <div class="crosshair-line left"></div>
-      <div class="crosshair-line right"></div>
-    </div>
-
-    <!-- Top-left info -->
-    <div id="hud-info" class="glass-panel-sm">
-      <div class="info-row"><span class="info-label">FPS</span><span id="fps-counter" class="info-value">60</span></div>
-      <div class="info-row"><span class="info-label">POS</span><span id="player-pos" class="info-value">0, 0, 0</span></div>
-      <div class="info-row"><span class="info-label">BIOME</span><span id="current-biome" class="info-value">Plains</span></div>
-      <div class="info-row"><span class="info-label">TIME</span><span id="world-time" class="info-value">12:00</span></div>
-    </div>
-
-    <!-- Survival Bars -->
-    <div id="survival-bars">
-      <div class="stat-bar">
-        <span class="stat-icon">❤️</span>
-        <div class="bar-track health-track">
-          <div class="bar-fill health-fill" id="health-bar" style="width: 100%"></div>
-        </div>
-        <span class="stat-value" id="health-value">100</span>
-      </div>
-      <div class="stat-bar">
-        <span class="stat-icon">🍖</span>
-        <div class="bar-track hunger-track">
-          <div class="bar-fill hunger-fill" id="hunger-bar" style="width: 100%"></div>
-        </div>
-        <span class="stat-value" id="hunger-value">100</span>
-      </div>
-      <div class="stat-bar">
-        <span class="stat-icon">⚡</span>
-        <div class="bar-track stamina-track">
-          <div class="bar-fill stamina-fill" id="stamina-bar" style="width: 100%"></div>
-        </div>
-        <span class="stat-value" id="stamina-value">100</span>
-      </div>
-    </div>
-
-    <!-- Hotbar -->
-    <div id="hotbar">
-      <div class="hotbar-slots" id="hotbar-slots"></div>
-    </div>
-
-    <!-- Selected block indicator -->
-    <div id="selected-block" class="glass-panel-sm">
-      <span id="selected-block-name">Grass</span>
-    </div>
-  </div>
-
-  <!-- Inventory Panel -->
-  <div id="inventory-panel" class="hidden">
-    <div class="inventory-backdrop"></div>
-    <div class="inventory-container glass-panel">
-      <div class="inventory-header">
-        <h2>🎒 Inventory</h2>
-        <button id="btn-close-inventory" class="close-btn">✕</button>
-      </div>
-      <div class="inventory-grid" id="inventory-grid"></div>
-    </div>
-  </div>
-
-  <!-- Crafting Panel -->
-  <div id="crafting-panel" class="hidden">
-    <div class="crafting-backdrop"></div>
-    <div class="crafting-container glass-panel">
-      <div class="crafting-header">
-        <h2>⚒️ Crafting</h2>
-        <button id="btn-close-crafting" class="close-btn">✕</button>
-      </div>
-      <div class="crafting-body">
-        <div class="recipe-list" id="recipe-list"></div>
-        <div class="crafting-preview" id="crafting-preview">
-          <p>Select a recipe to craft</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Pause Menu -->
-  <div id="pause-menu" class="hidden">
-    <div class="pause-backdrop"></div>
-    <div class="pause-panel glass-panel">
-      <h2>⏸️ Paused</h2>
-      <button id="btn-resume" class="menu-btn primary">
-        <span class="btn-icon">▶️</span>
-        <span class="btn-label">Resume</span>
-      </button>
-      <button id="btn-pause-settings" class="menu-btn">
-        <span class="btn-icon">⚙️</span>
-        <span class="btn-label">Settings</span>
-      </button>
-      <button id="btn-quit" class="menu-btn danger">
-        <span class="btn-icon">🚪</span>
-        <span class="btn-label">Quit to Menu</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- Notification Toast -->
   <div id="toast-container"></div>
 
   <script type="module" src="/src/main.js"></script>
