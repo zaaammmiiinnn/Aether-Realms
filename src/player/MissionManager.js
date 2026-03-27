@@ -6,9 +6,11 @@
 import * as THREE from 'three';
 
 export class MissionManager {
-  constructor(scene, world) {
+  constructor(scene, world, ruinSystem, sky) {
     this.scene = scene;
     this.world = world;
+    this.ruinSystem = ruinSystem;
+    this.sky = sky;
     this.artifacts = [];
     this.collected = 0;
     this.total = 3;
@@ -74,8 +76,15 @@ export class MissionManager {
       if (this.collected >= this.total) {
         this.completed = true;
         this.updateHUD();
-        // Global notify function from main.js
-        if (window.showToast) window.showToast('MISSION COMPLETE: Ancient Energy Stabilized!', 'success');
+        // TRIGGER WOW MOMENT
+        if (this.ruinSystem) this.ruinSystem.activateWowMoment();
+        if (this.sky) {
+          // Instantly shift time to midnight/creepy lighting
+          this.sky.timeOfDay = Math.PI * 1.5; 
+          this.sky.updateLightingColors(); // if method exists, else sky.update will catch it
+        }
+        
+        if (window.showToast) window.showToast('MISSION COMPLETE: The Anomaly Awakens...', 'success');
       } else {
         this.updateHUD();
         if (window.showToast) window.showToast(`Artifact Collected! (${this.collected}/${this.total})`, 'info');

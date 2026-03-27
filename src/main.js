@@ -80,7 +80,7 @@ async function init() {
   // Initialize new systems (Prefabs, Ruins, Missions)
   prefabSystem = new PrefabSystem(renderer.scene, world);
   ruinSystem = new RuinGenerator(renderer.scene, world);
-  missionManager = new MissionManager(renderer.scene, world);
+  missionManager = new MissionManager(renderer.scene, world, ruinSystem, sky);
   window.showToast = showToast;
   
   // Create dramatic spawn ruin
@@ -95,10 +95,19 @@ async function init() {
   // Spawn player near ruin
   player.spawn();
   
-  updateLoadingText('Ready!');
+  // Remove old UI
+  document.getElementById('inventory-panel')?.remove();
+  document.getElementById('crafting-panel')?.remove();
+  document.getElementById('main-menu')?.remove();
+
+  // Instant play
+  updateLoadingText('Loading World...');
   updateLoadingBar(100);
 
-  setTimeout(() => setState(GameState.MENU), 500);
+  setTimeout(() => {
+    setState(GameState.PLAYING);
+    showToast('Click anywhere to lock mouse. Collect the 3 glowing anomalies.', 'info');
+  }, 100);
 
   updateHUDPrefab();
   gameLoop();

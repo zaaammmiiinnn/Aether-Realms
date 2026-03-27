@@ -51,6 +51,55 @@ export class World {
     this.scene.add(this.terrainMesh);
     
     this.collidableMeshes.push(this.terrainMesh);
+
+    this.populateEnvironment();
+  }
+
+  populateEnvironment() {
+    const treeTrunkGeo = new THREE.CylinderGeometry(0.3, 0.5, 2.5, 5);
+    const treeTrunkMat = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 1.0 });
+
+    const treeTopGeo = new THREE.ConeGeometry(2, 4, 5);
+    const treeTopMat = new THREE.MeshStandardMaterial({ color: 0x2d4c1e, roughness: 0.8, flatShading: true });
+
+    const rockGeo = new THREE.DodecahedronGeometry(1, 0);
+    const rockMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.9, flatShading: true });
+
+    for (let i = 0; i < 300; i++) {
+       const x = (Math.random() - 0.5) * 800;
+       const z = (Math.random() - 0.5) * 800;
+       
+       // Keep clear of spawn and ruin area
+       if (x > -30 && x < 30 && z > -30 && z < 70) continue;
+
+       const y = this.getSurfaceHeight(x, z);
+
+       if (Math.random() > 0.4) {
+          // Tree
+          const trunk = new THREE.Mesh(treeTrunkGeo, treeTrunkMat);
+          trunk.position.set(x, y + 1.0, z);
+          
+          const top = new THREE.Mesh(treeTopGeo, treeTopMat);
+          top.position.set(x, y + 3.0, z);
+          top.rotation.y = Math.random() * Math.PI;
+          
+          trunk.castShadow = true; trunk.receiveShadow = true;
+          top.castShadow = true; top.receiveShadow = true;
+          this.scene.add(trunk); this.scene.add(top);
+          this.collidableMeshes.push(trunk);
+       } else {
+          // Rock
+          const rock = new THREE.Mesh(rockGeo, rockMat);
+          const s = 0.5 + Math.random() * 2.0;
+          rock.scale.set(s, s*0.5, s);
+          rock.position.set(x, y + s*0.2, z);
+          rock.rotation.y = Math.random() * Math.PI;
+          rock.rotation.x = Math.random() * 0.5;
+          rock.castShadow = true; rock.receiveShadow = true;
+          this.scene.add(rock);
+          this.collidableMeshes.push(rock);
+       }
+    }
   }
 
   /**
