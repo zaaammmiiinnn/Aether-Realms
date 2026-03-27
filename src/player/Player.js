@@ -231,66 +231,47 @@ export class Player {
   }
 
   /**
-   * Move with AABB collision detection
+   * Move with continuous heightmap tracking and basic raycast collision for prefabs
    */
   moveWithCollision(dt) {
-    const hw = this.width; // half-width
-    const h = this.height;
+    // Horizontal movement
+    const nextX = this.position.x + this.velocity.x * dt;
+    const nextZ = this.position.z + this.velocity.z * dt;
 
-    // Move along each axis separately
-    // X axis
-    const newX = this.position.x + this.velocity.x * dt;
-    if (!this.checkCollision(newX, this.position.y, this.position.z, hw, h)) {
-      this.position.x = newX;
+    // Simple horizontal raycast vs Prefabs
+    const moveDir = new THREE.Vector3(this.velocity.x, 0, this.velocity.z);
+    let canMove = true;
+
+    if (moveDir.lengthSq() > 0.001 && this.world.collidableMeshes) {
+      moveDir.normalize();
+      const origin = new THREE.Vector3(this.position.x, this.position.y + 1, this.position.z);
+      const ray = new THREE.Raycaster(origin, moveDir, 0, this.width * 2.0);
+      
+      const hits = ray.intersectObjects(this.world.collidableMeshes);
+      if (hits.length > 0 && hits[0].object !== this.world.terrainMesh) {
+         canMove = false;
+      }
+    }
+
+    if (canMove) {
+      this.position.x = nextX;
+      this.position.z = nextZ;
     } else {
       this.velocity.x = 0;
-    }
-
-    // Y axis
-    const newY = this.position.y + this.velocity.y * dt;
-    if (!this.checkCollision(this.position.x, newY, this.position.z, hw, h)) {
-      this.position.y = newY;
-      this.grounded = false;
-    } else {
-      if (this.velocity.y < 0) {
-        this.grounded = true;
-        // Snap to ground
-        this.position.y = Math.floor(this.position.y) + 0.01;
-      }
-      this.velocity.y = 0;
-    }
-
-    // Z axis
-    const newZ = this.position.z + this.velocity.z * dt;
-    if (!this.checkCollision(this.position.x, this.position.y, newZ, hw, h)) {
-      this.position.z = newZ;
-    } else {
       this.velocity.z = 0;
     }
-  }
 
-  /**
-   * Check AABB collision at a position
-   */
-  checkCollision(x, y, z, hw, h) {
-    // Check all blocks the player's AABB intersects
-    const minX = Math.floor(x - hw);
-    const maxX = Math.floor(x + hw);
-    const minY = Math.floor(y);
-    const maxY = Math.floor(y + h);
-    const minZ = Math.floor(z - hw);
-    const maxZ = Math.floor(z + hw);
+    // Vertical movement (Gravity & Terrain Tracking)
+    this.position.y += this.velocity.y * dt;
+    const surfaceY = this.world.getSurfaceHeight(this.position.x, this.position.z);
 
-    for (let bx = minX; bx <= maxX; bx++) {
-      for (let by = minY; by <= maxY; by++) {
-        for (let bz = minZ; bz <= maxZ; bz++) {
-          if (this.world.isSolidAt(bx, by, bz)) {
-            return true;
-          }
-        }
-      }
+    if (this.position.y <= surfaceY) {
+      this.position.y = surfaceY;
+      this.velocity.y = 0;
+      this.grounded = true;
+    } else {
+      this.grounded = false;
     }
-    return false;
   }
 
   spawn() {
@@ -298,15 +279,6 @@ export class Player {
     this.position.set(0, surfaceY + 2, 0);
     this.velocity.set(0, 0, 0);
     this.rotation.set(0, 0, 0);
-
-    // Clear a safe space around the player
-    for (let dx = -1; dx <= 1; dx++) {
-      for (let dy = 0; dy <= 2; dy++) {
-        for (let dz = -1; dz <= 1; dz++) {
-          this.world.setBlock(Math.floor(this.position.x) + dx, Math.floor(this.position.y) + dy, Math.floor(this.position.z) + dz, 0); // 0 = AIR
-        }
-      }
-    }
   }
 
   /**

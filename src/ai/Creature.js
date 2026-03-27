@@ -298,16 +298,11 @@ export class CreatureManager {
     const z = playerPos.z + Math.sin(angle) * dist;
     const y = this.world.getSurfaceHeight(x, z) + 1;
 
-    // Don't spawn in water or underground
-    if (y < 36) return;
+    // Keep out of extreme deep valleys
+    if (y < 20) return;
 
-    const biome = this.world.getBiome(x, z);
-
-    // Pick a creature type valid for this biome
-    const validTypes = this.types.filter(t => t.spawnBiomes.includes(biome));
-    if (validTypes.length === 0) return;
-
-    const type = validTypes[Math.floor(Math.random() * validTypes.length)];
+    // Pick a random creature since there are no discrete biomes in the Phase 1 MVP
+    const type = this.types[Math.floor(Math.random() * this.types.length)];
     const creature = new Creature(type, new THREE.Vector3(x, y, z), this.world);
     this.creatures.push(creature);
     this.scene.add(creature.mesh);
