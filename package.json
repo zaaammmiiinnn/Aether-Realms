@@ -9,9 +9,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "three": "^0.160.0",
+    "howler": "^2.2.4",
     "simplex-noise": "^4.0.1",
-    "howler": "^2.2.4"
+    "terser": "^5.46.1",
+    "three": "^0.160.0"
   },
   "devDependencies": {
     "vite": "^5.0.0"
