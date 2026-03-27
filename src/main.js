@@ -291,7 +291,9 @@ function setState(newState) {
     case GameState.INVENTORY:
       show('hud');
       show('inventory-panel');
-      inventory.renderInventory();
+      inventory.renderInventory(player.selectedSlot, (newSlot) => {
+        player.selectedSlot = newSlot;
+      });
       document.exitPointerLock();
       break;
 

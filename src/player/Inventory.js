@@ -175,7 +175,7 @@ export class Inventory {
   /**
    * Render full inventory UI
    */
-  renderInventory() {
+  renderInventory(activeSlot = 0, onSlotSelect = null) {
     const grid = document.getElementById('inventory-grid');
     if (!grid) return;
 
@@ -184,6 +184,11 @@ export class Inventory {
     for (let i = 0; i < this.slots.length; i++) {
       const slot = document.createElement('div');
       slot.className = 'inventory-slot';
+      
+      // Highlight the currently active hotbar slot
+      if (i === activeSlot) {
+        slot.classList.add('active');
+      }
 
       const item = this.slots[i];
       if (item) {
@@ -198,20 +203,16 @@ export class Inventory {
         }
       }
 
-      // Click to move to hotbar
+      // Click to select or move to active hotbar slot
       slot.addEventListener('click', () => {
-        if (i >= this.hotbarSize) {
-          // Find first empty hotbar slot
-          for (let h = 0; h < this.hotbarSize; h++) {
-            if (!this.slots[h]) {
-              this.swapSlots(h, i);
-              this.renderInventory();
-              return;
-            }
-          }
-          // Or swap with slot 0
-          this.swapSlots(0, i);
-          this.renderInventory();
+        if (i < this.hotbarSize) {
+          // Clicked inside the hotbar -> select this slot
+          if (onSlotSelect) onSlotSelect(i);
+          this.renderInventory(i, onSlotSelect);
+        } else {
+          // Clicked inside the grid -> swap with the ACTIVE hotbar slot
+          this.swapSlots(activeSlot, i);
+          this.renderInventory(activeSlot, onSlotSelect);
         }
       });
 

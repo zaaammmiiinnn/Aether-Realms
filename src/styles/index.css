@@ -800,6 +800,12 @@ kbd {
   border-color: var(--accent-primary);
 }
 
+.inventory-slot.active {
+  background: rgba(108, 92, 231, 0.2);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 10px rgba(108, 92, 231, 0.4);
+}
+
 .inventory-slot .slot-count {
   position: absolute;
   bottom: 1px;
